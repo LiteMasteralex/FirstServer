@@ -192,10 +192,11 @@ app.put("/api/updateStudent/:id", jsonParser, function(req, res) {
 		});
 	}
 
-	let name = req.body.name;
+	let firstName = req.body.firstName;
+	let lastName = req.bosy.lastName
 	let id = req.body.id;
 
-	if (!name || !id) {
+	if (!firstName || !id || !lastName) {
 		res.statusMessage = "Missing Field in body.";
 		return res.status(406).json({
 			message: "Missing Field in body.",
@@ -211,16 +212,50 @@ app.put("/api/updateStudent/:id", jsonParser, function(req, res) {
 		});
 	}
 
-	let student = students.findIndex(object => object.id == id);
-	if(student == -1) {
-		res.statsMessage = "Student id not found on the list";
-		return res.status(404).json({
-			message: "Student id not found on the list",
-			status: 404
-		});
+	let updatedStudent = { id : id };
+
+	if ( firstName ){
+		updatedStudent.firstName = firstName;
 	}
-	students[student].name = name;
-	return res.status(202).json(req.body);
+
+	if ( lastName ){
+		updatedStudent.lastName = lastName;
+	}
+
+	StudentList.put(updatedStudent)
+		.then( student => {
+			res.status(200).json({
+				message : "Successfully updated the student",
+				status : 200,
+				student : student
+			});
+		})
+		.catch( err => {
+			if( err.message == 404 ) {
+				return res.status(404).json({
+					message: "Student not found in the list",
+					status: 404
+				});
+			}
+			else{
+				res.statusMessage = "Something went wrong with the DB. Try again later.";
+				return res.status( 500 ).json({
+					status : 500,
+					message : "Something went wrong with the DB. Try again later."
+				})
+			}
+		});
+	// OLD
+	// let student = students.findIndex(object => object.id == id);
+	// if(student == -1) {
+	// 	res.statsMessage = "Student id not found on the list";
+	// 	return res.status(404).json({
+	// 		message: "Student id not found on the list",
+	// 		status: 404
+	// 	});
+	// }
+	// students[student].name = name;
+	// return res.status(202).json(req.body);
 })
 
 // app.listen("8080", function() {

@@ -47,6 +47,26 @@ let StudentList = {
 		}).catch(function(error) {
 			throw Error(error);
 		});
+	},
+	put : function( updatedStudent ){
+		return StudentList.getByID( updatedStudent.id )
+			.then( student => {
+				if ( student ){
+					return Student.findOneAndUpdate( {id : student.id}, {$set : updatedStudent}, {new : true})
+						.then( newStudent => {
+							return newStudent;
+						})
+						.catch(error => {
+							throw Error(error);
+						});
+				}
+				else{
+					throw Error( "404" );
+				}
+			})
+			.catch( error => {
+				throw Error(error);
+			});
 	}
 }
 
