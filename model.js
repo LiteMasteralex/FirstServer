@@ -12,6 +12,13 @@ let studentSchema = mongoose.Schema({
 
 let Student = mongoose.model( 'Student', studentSchema );
 
+let usersSchema = mongoose.Schema({
+	username: { type : String },
+	password: { type : String }
+});
+
+let User = mongoose.model( 'User', usersSchema );
+
 let StudentList = {
 	getAll : function() {
 		return Student.find().then(function(students) {
@@ -70,4 +77,28 @@ let StudentList = {
 	}
 }
 
-module.exports = { StudentList };
+let UserList = {
+	get : function(user) {
+		return User.find({username: user.username}).then(function(foundUser) {
+			return foundUser;
+		}).catch(function(error) {
+			throw Error(error);
+		});
+	},
+	post : function(newUser) {
+		return User.find({username: newUser.username}).then(userList => {
+			if (userList.length == 0) {
+				return User.create(newUser).then(user => {
+					return user;
+				}).catch(function(error) {
+					throw Error(error);
+				});
+			}
+			throw Error( " 409 ");
+		}).catch(error => {
+			throw Error(error);
+		});
+	}
+}
+
+module.exports = { StudentList, UserList };

@@ -2,7 +2,8 @@ let express = require("express");
 let morgan = require("morgan");
 let bodyParser = require('body-parser');
 let mongoose = require('mongoose');
-let { StudentList } = require('./model');
+let bcrypt = require('bcryptjs');
+let { StudentList, UserList } = require('./model');
 const  {DATABASE_URL, PORT} = require('./config');
 
 let app = express();
@@ -257,6 +258,66 @@ app.put("/api/updateStudent/:id", jsonParser, function(req, res) {
 	// students[student].name = name;
 	// return res.status(202).json(req.body);
 })
+
+app.post('/login', jsonParser, (req, res) => {
+	let {username, password} = req.body;
+	UserList.get({username}).then( user => {
+		if(user.length == 0) {
+			res.statusMessage = "User or password does not match (U)"
+			return res.status(401).json({
+				message : "User or password does not match (U)",
+				status : 401
+			});
+		}
+		bcrypt.compare(password, user.password).then(result => {
+			res.status(200).json({
+				message: "Success",
+				status: 201
+			});
+		}).catch( error => {
+			res.statusMessage = "User or password does not match (P)"
+			return res.status(401).json({
+				message : "User or password does not match (P)",
+				status : 401
+			});
+		});
+	}).catch( error => {
+		console.log(error);
+		res.statusMessage = "Internal Server Error"
+		return res.status(500).json({
+			message : "Internal Server Error",
+			status : 500
+		});
+	});
+});
+
+app.post('/register', jsonParser, (req, res) => {
+	let username = req.body.username;
+	let password = req.body.password;
+	bcrypt.hash(password, 10).then(hashPasss => {
+		UserList.post({username, password: hashPasss}).then( user => {
+			if(user == 409) {
+				res.statusMessage = "User already Exists"
+				return res.status(409).json({
+					message : "User already Exists",
+					status : 409
+				});
+			}
+			console.log(user);
+			res.status(201).json({
+				message: "Success",
+				status: 201,
+				user: user
+			});
+		}).catch( error => {
+			res.statusMessage = "Internal Server Error"
+			return res.status(500).json({
+				message : "Internal Server Error",
+				status : 500
+			});
+		});
+	});
+});
 
 // app.listen("8080", function() {
 // 	console.log("You have entered a cursed land.")
